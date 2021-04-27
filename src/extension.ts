@@ -97,6 +97,10 @@ export function activate(context: ExtensionContext) {
                                 insertSnippet(generateFluentSetters(javaClass), editor);
                                 break;
                             }
+                            case 'javaGenerateGettersAndFluentSetters': {
+                                insertSnippet(generateGettersAndFluentSetters(javaClass), editor);
+                                break;
+                            }
                             case 'toString': {
                                 insertSnippet(generateToString(javaClass), editor);
                                 break;
@@ -155,6 +159,10 @@ export function activate(context: ExtensionContext) {
         runner(generateFluentSetters);
     });
 
+    let generateGettersAndFluentSettersCommand = commands.registerCommand('extension.javaGenerateGettersAndFluentSetters', () => {
+        runner(generateGettersAndFluentSetters);
+    });
+
     context.subscriptions.push(generateAll);
     context.subscriptions.push(generateConstructorCommand);
     context.subscriptions.push(generateConstructorUsingAllFinalFieldsCommand);
@@ -164,6 +172,7 @@ export function activate(context: ExtensionContext) {
     context.subscriptions.push(generateToStringCommand);
     context.subscriptions.push(generateConstructorUsingFieldsCommand);
     context.subscriptions.push(generateFluentSettersCommand);
+    context.subscriptions.push(generateGettersAndFluentSettersCommand);
 }
 
 function showExistsWarningIfFound() {
@@ -254,6 +263,48 @@ function generateFluentSetters(javaClass: JavaClass): string {
                     it.variableName
                 }) ${getMethodOpeningBraceOnNewLine()}{
 \t\t${fluentCallsNormalSetters() ? 'set' + it.variableNameFirstCapital() + '(' + it.variableName + ')' : 'this.' + it.variableName + ' = ' + it.variableName};
+\t\treturn this;
+\t}\n`;
+            }
+        }
+    });
+    return result;
+}
+
+function generateGettersAndFluentSetters(javaClass: JavaClass): string {
+    let result = '';
+    javaClass.declerations.forEach(it => {
+
+        if (it.isBoolean()) {
+            if (isGenerateEvenIfExists() || javaClass.methodNames.indexOf(`is${it.variableNameFirstCapital()}`) === -1) {
+                result += it.annotation ? `\n\t${it.annotation}` : '';
+                result += `\n\tpublic ${it.variableType} is${it.variableNameFirstCapital()}() ${getMethodOpeningBraceOnNewLine()}{
+\t\treturn this.${it.variableName};
+\t}\n`;
+            }
+        }
+        if (isGenerateEvenIfExists() || javaClass.methodNames.indexOf(`get${it.variableNameFirstCapital()}`) === -1) {
+            result += it.annotation ? `\n\t${it.annotation}` : '';
+            result += `\n\tpublic ${it.variableType} get${it.variableNameFirstCapital()}() ${getMethodOpeningBraceOnNewLine()}{
+\t\treturn this.${it.variableName};
+\t}\n\n`;
+        }
+
+        if (!it.isFinal) {
+            if (isGenerateEvenIfExists() || javaClass.methodNames.indexOf(`set${it.variableNameFirstCapital()}`) === -1) {
+                result += includeGeneratedAnnotation() ? `\t@Generated("sohibe.vscode")\n` : '';
+                result += it.annotation ? `\t${it.annotation}\n` : '';
+                result += `\tpublic ${javaClass.name} set${it.variableNameFirstCapital()}(${it.variableType} ${it.variableName}) ${getMethodOpeningBraceOnNewLine()}{
+\t\tthis.${it.variableName} = ${it.variableName};
+\t}\n`;
+        }
+            
+        if (isGenerateEvenIfExists() || javaClass.methodNames.indexOf(it.variableName) === -1) {
+            if (!it.isFinal) {
+                result += `\n\tpublic ${javaClass.name} ${getFluentMethodPrefix() ? getFluentMethodPrefix() + it.variableNameFirstCapital() : it.variableName}(${it.variableType} ${
+                    it.variableName
+                }) ${getMethodOpeningBraceOnNewLine()}{
+\t\tthis.${it.variableName} = ${it.variableName};
 \t\treturn this;
 \t}\n`;
             }
