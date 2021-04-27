@@ -46,6 +46,10 @@
                 "title": "Generate Getters And Setters"
             },
             {
+                "command": "extension.javaGenerateGettersAndFluentSetters",
+                "title": "Generate Getters and Fluent Setters"
+            },
+            {
                 "command": "extension.javaGenerateFluentSetters",
                 "title": "Generate Only Fluent Setters"
             },
@@ -98,6 +102,11 @@
                 {
                     "when": "resourceLangId == java",
                     "command": "extension.javaGenerateGettersAndSetter",
+                    "group": "gettersetter@1"
+                },
+                {
+                    "when": "resourceLangId == java",
+                    "command": "extension.javaGenerateGettersAndFluentSetters",
                     "group": "gettersetter@1"
                 },
                 {
